@@ -33,7 +33,7 @@
  * Corp. takes over development as new packages.
  ********************************************************************/
 
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 
 #include "vesc_driver/vesc_driver.h"
 

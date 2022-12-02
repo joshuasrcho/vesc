@@ -33,31 +33,31 @@
  * Corp. takes over development as new packages.
  ********************************************************************/
 
-#ifndef VESC_DRIVER_VESC_DRIVER_H_
-#define VESC_DRIVER_VESC_DRIVER_H_
+#ifndef VESC_DRIVER_VESC_DRIVER_HPP_
+#define VESC_DRIVER_VESC_DRIVER_HPP_
 
 #include <cassert>
 #include <cmath>
+#include <experimental/optional>
 #include <functional>
 #include <memory>
 #include <sstream>
 #include <string>
 
-#include <boost/optional.hpp>
+#include <rclcpp/rclcpp.hpp>
 
-#include <ros/ros.h>
-#include <std_msgs/Float64.h>
-#include <vesc_msgs/VescStateStamped.h>
+#include <std_msgs/msg/float64.hpp>
+#include <vesc_msgs/msg/vesc_state_stamped.hpp>
 
-#include "vesc_driver/vesc_interface.h"
-#include "vesc_driver/vesc_packet.h"
+#include "vesc_driver/vesc_interface.hpp"
+#include "vesc_driver/vesc_packet.hpp"
 
 namespace vesc_driver
 {
-class VescDriver
+class VescDriver : public rclcpp::Node
 {
 public:
-  VescDriver(ros::NodeHandle nh, ros::NodeHandle private_nh);
+  VescDriver(const rclcpp::NodeOptions& options);
 
 private:
   // interface to the VESC
@@ -68,13 +68,13 @@ private:
   // limits on VESC commands
   struct CommandLimit
   {
-    CommandLimit(const ros::NodeHandle& nh, const std::string& str,
-                 const boost::optional<double>& min_lower = boost::optional<double>(),
-                 const boost::optional<double>& max_upper = boost::optional<double>());
+    CommandLimit(rclcpp::Node* node_ptr, const std::string& str, const std::optional<double>& min_lower = std::nullopt,
+                 const std::optional<double>& max_upper = std::nullopt);
     double clip(double value);
+    rclcpp::Logger logger;
     std::string name;
-    boost::optional<double> lower;
-    boost::optional<double> upper;
+    std::optional<double> lower;
+    std::optional<double> upper;
   };
   CommandLimit duty_cycle_limit_;
   CommandLimit current_limit_;
@@ -84,15 +84,15 @@ private:
   CommandLimit servo_limit_;
 
   // ROS services
-  ros::Publisher state_pub_;
-  ros::Publisher servo_sensor_pub_;
-  ros::Subscriber duty_cycle_sub_;
-  ros::Subscriber current_sub_;
-  ros::Subscriber brake_sub_;
-  ros::Subscriber speed_sub_;
-  ros::Subscriber position_sub_;
-  ros::Subscriber servo_sub_;
-  ros::Timer timer_;
+  rclcpp::Publisher<vesc_msgs::msg::VescStateStamped>::SharedPtr state_pub_;
+  rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr servo_sensor_pub_;
+  rclcpp::SubscriptionBase::SharedPtr duty_cycle_sub_;
+  rclcpp::SubscriptionBase::SharedPtr current_sub_;
+  rclcpp::SubscriptionBase::SharedPtr brake_sub_;
+  rclcpp::SubscriptionBase::SharedPtr speed_sub_;
+  rclcpp::SubscriptionBase::SharedPtr position_sub_;
+  rclcpp::SubscriptionBase::SharedPtr servo_sub_;
+  rclcpp::TimerBase::SharedPtr timer_;
 
   // driver modes (possible states)
   typedef enum
@@ -108,15 +108,15 @@ private:
   int num_motor_pole_pairs_;   // the number of motor pole pairs
 
   // ROS callbacks
-  void timerCallback(const ros::TimerEvent& event);
-  void dutyCycleCallback(const std_msgs::Float64::ConstPtr& duty_cycle);
-  void currentCallback(const std_msgs::Float64::ConstPtr& current);
-  void brakeCallback(const std_msgs::Float64::ConstPtr& brake);
-  void speedCallback(const std_msgs::Float64::ConstPtr& speed);
-  void positionCallback(const std_msgs::Float64::ConstPtr& position);
-  void servoCallback(const std_msgs::Float64::ConstPtr& servo);
+  void timerCallback();
+  void dutyCycleCallback(const std_msgs::msg::Float64::SharedPtr duty_cycle);
+  void currentCallback(const std_msgs::msg::Float64::SharedPtr current);
+  void brakeCallback(const std_msgs::msg::Float64::SharedPtr brake);
+  void speedCallback(const std_msgs::msg::Float64::SharedPtr speed);
+  void positionCallback(const std_msgs::msg::Float64::SharedPtr position);
+  void servoCallback(const std_msgs::msg::Float64::SharedPtr servo);
 };
 
 }  // namespace vesc_driver
 
-#endif  // VESC_DRIVER_VESC_DRIVER_H_
+#endif  // VESC_DRIVER_VESC_DRIVER_HPP_
