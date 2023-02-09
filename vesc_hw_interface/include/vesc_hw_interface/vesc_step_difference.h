@@ -18,7 +18,7 @@
 #ifndef VESC_STEP_DIFFERENCE_H_
 #define VESC_STEP_DIFFERENCE_H_
 
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 #include <deque>
 
 namespace vesc_step_difference
